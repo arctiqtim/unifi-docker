@@ -1,4 +1,4 @@
-version: '2.2'
+version: '2'
 services:
   mongo:
     image: mongo:3.4
@@ -6,26 +6,36 @@ services:
       - unifi
     restart: always
     volumes:
-      - db:/data/db
+      - /mnt/MEDIA/unifi/db:/data/db
+    environment:
+      RUNAS_UID0: "false"
+      UNIFI_UID: 500
+      UNIFI_GID: 100
   controller:
-    image: "jacobalberty/unifi:${TAG:-latest}"
+    image: "jacobalberty/unifi:latest"
     depends_on:
       - mongo
-    init: true
     networks:
       - unifi
     restart: always
     volumes:
-      - data:/unifi/data
-      - log:/unifi/log
-      - cert:/unifi/cert
-      - init:/unifi/init.d
+      - /mnt/MEDIA/unifi/data:/unifi/data
+      - /mnt/MEDIA/unifi/log:/unifi/log
+      - /mnt/MEDIA/certs/condo.thefairweathers.ca/:/unifi/cert
+      - /mnt/MEDIA/unifi/init:/unifi/init.d
     environment:
       DB_URI: mongodb://mongo/unifi
       STATDB_URI: mongodb://mongo/unifi_stat
       DB_NAME: unifi
+#      CERT_IS_CHAIN: "true"
+#      CERTNAME: fullchain.cer
+#      CERT_PRIVATE_NAME: condo.thefairweathers.ca.key
+      RUNAS_UID0: "false"
+      UNIFI_UID: 500
+      UNIFI_GID: 100
     ports:
       - "8080:8080"
+      - "8880:8880"
       - "8443:8443"
       - "3478:3478/udp"
       - "10001:10001/udp"
@@ -36,14 +46,7 @@ services:
     command: bash -c 'tail -f /unifi/log/*'
     restart: always
     volumes:
-      - log:/unifi/log
-
-volumes:
-  db:
-  data:
-  log:
-  cert:
-  init:
+      - /mnt/MEDIA/unifi/log:/unifi/log
 
 networks:
   unifi:
